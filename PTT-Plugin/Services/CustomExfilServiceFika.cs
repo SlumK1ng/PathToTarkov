@@ -291,7 +291,7 @@ internal static class CustomExfilServiceFika
         };
 
         // 2. Create the transit payload
-        GClass1926 transitPayload = new()
+        GClass1961 transitPayload = new()
         {
             hash = Guid.NewGuid().ToString(),
             playersCount = 1,

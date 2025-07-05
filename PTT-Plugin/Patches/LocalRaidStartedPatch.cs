@@ -12,7 +12,7 @@ internal class LocalRaidStartedPatch() : ModulePatch
 {
     protected override MethodBase GetTargetMethod()
     {
-        return typeof(Class301).GetMethod(nameof(Class301.LocalRaidStarted));
+        return typeof(Class301).GetMethod(nameof(Class303.LocalRaidStarted));
     }
 
     [PatchPostfix]
