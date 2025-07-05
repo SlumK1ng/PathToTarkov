@@ -8,7 +8,7 @@ namespace PTT.Services;
 
 public class CurrentLocationDataService
 {
-    private CurrentLocationDataResponse CurrentLocationData { get; set; } = new() { exfilsTargets = { } };
+    private CurrentLocationDataResponse CurrentLocationData { get; set; } = new CurrentLocationDataResponse();
 
     public void Init()
     {
@@ -24,7 +24,7 @@ public class CurrentLocationDataService
             return false;
         }
 
-        return CurrentLocationData.exfilsTargets.ContainsKey(exitName);
+        return CurrentLocationData?.exfilsTargets != null && CurrentLocationData.exfilsTargets.ContainsKey(exitName);
     }
 
     public List<ExfilTarget> GetExfilTargets(ExfiltrationPoint exfil)
@@ -42,7 +42,7 @@ public class CurrentLocationDataService
             return null;
         }
 
-        if (!CurrentLocationData.exfilsTargets.TryGetValue(exitName, out List<ExfilTarget> exfilTargets))
+        if (CurrentLocationData?.exfilsTargets == null || !CurrentLocationData.exfilsTargets.TryGetValue(exitName, out List<ExfilTarget> exfilTargets))
         {
             Logger.Warning($"cannot retrieve exfil targets for exfil '{exitName}'");
             return null;
