@@ -20,7 +20,7 @@
     "clean:all": "npm run clean:client && npm run clean",
     "rebuild": "npm run clean && npm run build",
     "rebuild:all": "npm run clean:all && npm run build:all",
-    "build": "tsc",
+    "build": "node ./node_modules/typescript/bin/tsc",
     "build:docs": "npm run build:docs:all-exfils",
     "build:docs:all-exfils": "node scripts/generate-all-exfils --markdown > ALL_EXFILS.md",
     "build:exfils": "node scripts/generate-all-exfils --javascript > src/_generated/all-vanilla-exfils.ts && npm run prettier",
