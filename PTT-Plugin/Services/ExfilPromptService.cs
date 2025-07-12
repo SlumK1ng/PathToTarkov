@@ -40,6 +40,13 @@ internal class ExfilPromptService(InteractableExfilsService ieService)
             return null;
         }
 
+        // Check if this extraction point is enabled in PathToTarkov config
+        if (Plugin.CurrentLocationDataService != null && !Plugin.CurrentLocationDataService.IsExfiltrationPointEnabled(exfil))
+        {
+            // This extraction is disabled, prevent any interaction
+            return new OnActionsAppliedResult([], null);
+        }
+
         customExfilTrigger.RequiresManualActivation = true;
         return null;
     }
@@ -62,6 +69,13 @@ internal class ExfilPromptService(InteractableExfilsService ieService)
         {
             Logger.Error("ExfilPromptHandler: ExfiltrationPoint.Settings.Name is null");
             return null;
+        }
+
+        // Check if this extraction point is enabled in PathToTarkov config
+        if (Plugin.CurrentLocationDataService != null && !Plugin.CurrentLocationDataService.IsExfiltrationPointEnabled(exfil))
+        {
+            // This extraction is disabled, return empty actions to prevent any interaction
+            return new OnActionsAppliedResult([], null);
         }
 
         string exitName = exfil.Settings.Name;

@@ -9,10 +9,22 @@ namespace PTT.Services;
 public class CurrentLocationDataService
 {
     private CurrentLocationDataResponse CurrentLocationData { get; set; } = new CurrentLocationDataResponse();
+    private bool _isInitialized = false;
 
     public void Init()
     {
+        if (_isInitialized)
+        {
+            Logger.Info("CurrentLocationDataService already initialized, skipping");
+            return;
+        }
         FetchExfilsTargetsForCurrentLocation();
+        _isInitialized = true;
+    }
+
+    public bool IsInitialized()
+    {
+        return _isInitialized;
     }
 
     public bool IsExfiltrationPointEnabled(ExfiltrationPoint exfil)
@@ -71,5 +83,11 @@ public class CurrentLocationDataService
         {
             Logger.Error($"Error occurred during request: {ex.Message}");
         }
+    }
+
+    public void Reset()
+    {
+        _isInitialized = false;
+        CurrentLocationData = new CurrentLocationDataResponse();
     }
 }

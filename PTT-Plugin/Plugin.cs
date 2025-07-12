@@ -115,6 +115,9 @@ public class Plugin : BaseUnityPlugin
         {
             CurrentLocationDataService.Init();
             Helpers.Logger.Info("Initialized CurrentLocationDataService");
+            
+            // Apply exfil filtering now that location data is loaded
+            Patches.InitAllExfiltrationPointsPatch.ApplyExfilFiltering();
         }
         else
         {
@@ -146,6 +149,12 @@ public class Plugin : BaseUnityPlugin
     public static void RaidEnded()
     {
         Helpers.Logger.Info("Raid ended!");
+        
+        // Reset CurrentLocationDataService for next raid
+        if (CurrentLocationDataService != null)
+        {
+            CurrentLocationDataService.Reset();
+        }
     }
 
     public static void DisplayOutdatedVersionsWarnings()

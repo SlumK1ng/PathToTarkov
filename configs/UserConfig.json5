@@ -1,0 +1,11 @@
+{
+  selectedConfig: 'Slum_K1ng',
+  gameplay: {
+    multistash: true,
+    tradersAccessRestriction: true,
+    resetOffraidPositionOnPlayerDeath: true,
+    playerScavMoveOffraidPosition: false,
+    keepFoundInRaidTweak: true,
+  },
+  runUninstallProcedure: false,
+}

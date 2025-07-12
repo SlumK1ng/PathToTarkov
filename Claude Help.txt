@@ -1,0 +1,2 @@
+cd "/mnt/c/SPT/SPT 3.11.3 - FIKA/PathToTarkov-master"
+
