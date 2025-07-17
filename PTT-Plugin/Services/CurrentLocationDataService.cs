@@ -20,6 +20,8 @@ public class CurrentLocationDataService
         }
         FetchExfilsTargetsForCurrentLocation();
         _isInitialized = true;
+
+        PTT.Patches.InitAllExfiltrationPointsPatch.TryApplyExfilFiltering();
     }
 
     public bool IsInitialized()

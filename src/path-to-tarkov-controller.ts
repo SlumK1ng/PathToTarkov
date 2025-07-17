@@ -88,7 +88,7 @@ export class PathToTarkovController {
     private readonly packageJson: PackageJson,
     private tradersAvailabilityService: TradersAvailabilityService,
     private readonly container: DependencyContainer,
-    private readonly db: DatabaseServer,
+    public readonly db: DatabaseServer,
     private readonly saveServer: SaveServer,
     configServer: ConfigServer,
     private readonly getRaidCache: (sessionId: string) => RaidCache | null,

@@ -22,6 +22,11 @@ internal class ExfilPromptService(InteractableExfilsService ieService)
         IndexedExfilPrompts = [];
     }
 
+    public void ClearCachedPrompts()
+    {
+        ClearExfilPromptsCache();
+    }
+
     private void InitPromptHandlers()
     {
         // requires manual activation (no auto-extract even if the player enabled the IEAPI option in BepInEx)
