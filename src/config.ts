@@ -439,18 +439,14 @@ export const processConfig = (originalConfig: RawConfig): Config => {
     infiltrations_config: infiltrationsConfig,
     exfiltrations,
     offraid_regen_config: {
-      ...rawConfig.offraid_regen_config,
       hydration: {
-        ...rawConfig.offraid_positions?.hydration,
-        access_via: [],
+        access_via: rawConfig.offraid_regen_config?.hydration?.access_via ?? [],
       },
       energy: {
-        ...rawConfig.offraid_positions?.energy,
-        access_via: [],
+        access_via: rawConfig.offraid_regen_config?.energy?.access_via ?? [],
       },
       health: {
-        ...rawConfig.offraid_positions?.health,
-        access_via: [],
+        access_via: rawConfig.offraid_regen_config?.health?.access_via ?? [],
       },
     },
     traders_config: {
