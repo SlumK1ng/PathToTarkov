@@ -24,6 +24,7 @@
         'TraderRagman',
         'TraderMechanic',
         'TraderScorpion',
+        'FleaMarket',
       ],
     },
     energy: {
@@ -43,6 +44,7 @@
         'TraderRagman',
         'TraderMechanic',
         'TraderScorpion',
+        'FleaMarket',
       ],
     },
     health: {
@@ -98,6 +100,10 @@
     // Scorpion
     '6688d464bc40c867f60e7d7e': {
       access_via: ['TraderScorpion'], //Scorpion - Pier Boat (Shoreline)
+    },
+    // Flea Market (Ragfair)
+    ragfair: {
+      access_via: ['FleaMarket'], //Flea Market - Cardinal Apartments Parking (Streets)
     },
   },
 
@@ -159,6 +165,11 @@
       id: 'Scorpion_Stash',
       size: 50,
       access_via: ['TraderScorpion'],
+    },
+    {
+      id: 'RagFair_Stash',
+      size: 50,
+      access_via: ['FleaMarket'],
     },
   ],
 
@@ -226,6 +237,7 @@
       E4: ['StreetstoGroundZero'],
       E7: ['InterchangetoStreets'],
       E7_car: ['TraderFence6'],
+      scav_e7: ['FleaMarket'],
     },
     sandbox: {
       Nakatani_stairs_free_exit: ['StreetstoGroundZero'],
@@ -359,6 +371,9 @@
     },
     TraderScorpion: {
       shoreline: ['Pier Boat'],
+    },
+    FleaMarket: {
+      tarkovstreets: ['Cardinal Appartments Parking'],
     },
   },
 
@@ -526,6 +541,11 @@
     TraderScorpion: {
       displayName: {
         en: 'Scorpion',
+      },
+    },
+    FleaMarket: {
+      displayName: {
+        en: 'Flea Market',
       },
     },
   },

@@ -129,10 +129,37 @@ export class PathToTarkovController {
 
   init(): void {
     this.overrideControllers();
+    this.overrideRagfairRoutes();
   }
 
   getFullVersion(): string {
     return this.packageJson.version;
+  }
+
+  public setEarlyRagFairConfig(): void {
+    const db = this.db;
+    const globals = db.getTables().globals;
+
+    if (!globals) {
+      throw new Error('Path To Tarkov: globals not found in database');
+    }
+
+    const userConfig = this.getUserConfig();
+    const fleaMarketMode = userConfig.gameplay.fleaMarketMode;
+    const fleaMarketMinLevel = userConfig.gameplay.fleaMarketMinLevel;
+
+    if (fleaMarketMode === 'disabled') {
+      this.debug('Early RagFair configuration: disabled mode');
+      globals.config.RagFair.enabled = true; // Keep enabled to prevent UI issues
+      globals.config.RagFair.minUserLevel = 99;
+    } else if (fleaMarketMode === 'everywhere') {
+      this.debug(
+        `Early RagFair configuration: enabled everywhere with min level ${fleaMarketMinLevel}`,
+      );
+      globals.config.RagFair.enabled = true;
+      globals.config.RagFair.minUserLevel = fleaMarketMinLevel;
+    }
+    // Note: location_based mode is handled dynamically per-session in createGetGlobals
   }
 
   loaded(config: Config): void {
@@ -580,8 +607,201 @@ export class PathToTarkovController {
         });
       }
 
+      // Handle Ragfair (Flea Market) access
+      const userConfig = this.getUserConfig();
+      const fleaMarketMode = userConfig.gameplay.fleaMarketMode;
+      const fleaMarketMinLevel = userConfig.gameplay.fleaMarketMinLevel;
+
+      if (fleaMarketMode === 'disabled') {
+        this.debug(`[${sessionId}] Ragfair disabled by user config`);
+        globals.config.RagFair.enabled = true; // Keep enabled to prevent UI issues
+        globals.config.RagFair.minUserLevel = 99;
+      } else if (fleaMarketMode === 'everywhere') {
+        this.debug(
+          `[${sessionId}] Ragfair enabled everywhere with min level ${fleaMarketMinLevel}`,
+        );
+        globals.config.RagFair.enabled = true;
+        globals.config.RagFair.minUserLevel = fleaMarketMinLevel;
+      } else if (fleaMarketMode === 'location_based') {
+        const ragfairConfig = this.getConfig(sessionId).traders_config.ragfair;
+        if (ragfairConfig) {
+          const ragfairAvailable = checkAccessVia(ragfairConfig.access_via, offraidPosition);
+          if (ragfairAvailable) {
+            this.debug(
+              `[${sessionId}] Ragfair enabled at position ${offraidPosition} with min level ${fleaMarketMinLevel}`,
+            );
+            globals.config.RagFair.enabled = true;
+            globals.config.RagFair.minUserLevel = fleaMarketMinLevel;
+          } else {
+            this.debug(`[${sessionId}] Ragfair disabled at position ${offraidPosition}`);
+            globals.config.RagFair.enabled = true; // Keep enabled to prevent UI issues
+            globals.config.RagFair.minUserLevel = 99;
+          }
+        } else {
+          // No ragfair config found, default to everywhere mode
+          this.debug(
+            `[${sessionId}] No ragfair config found, defaulting to everywhere mode with min level ${fleaMarketMinLevel}`,
+          );
+          globals.config.RagFair.enabled = true;
+          globals.config.RagFair.minUserLevel = fleaMarketMinLevel;
+        }
+      }
+
       return JSON.stringify(parsed) as any;
     };
+  }
+
+  private overrideRagfairRoutes(): void {
+    // Hook into ragfair callbacks to enforce flea market restrictions
+    this.container.afterResolution(
+      'RagfairCallbacks',
+      (_t, result) => {
+        const ragfairCallbacks = Array.isArray(result) ? result[0] : result;
+
+        // Helper function to update server-side globals based on player location
+        const updateGlobalsForSession = (sessionID: string): number => {
+          const offraidPosition = this.getOffraidPosition(sessionID);
+          const userConfig = this.getUserConfig();
+          const fleaMarketMode = userConfig.gameplay.fleaMarketMode;
+          const fleaMarketMinLevel = userConfig.gameplay.fleaMarketMinLevel;
+
+          // Get the server-side globals
+          const globals = this.db.getTables().globals;
+          if (!globals) {
+            throw new Error('Path To Tarkov: globals not found in database');
+          }
+          const originalMinLevel = globals.config.RagFair.minUserLevel;
+
+          // Determine the correct minUserLevel based on fleaMarketMode and player location
+          let targetMinLevel = fleaMarketMinLevel;
+
+          if (fleaMarketMode === 'disabled') {
+            targetMinLevel = 99;
+          } else if (fleaMarketMode === 'location_based') {
+            const ragfairConfig = this.getConfig(sessionID).traders_config.ragfair;
+            if (ragfairConfig && !checkAccessVia(ragfairConfig.access_via, offraidPosition)) {
+              targetMinLevel = 99;
+            }
+          }
+
+          // Update server-side globals
+          globals.config.RagFair.minUserLevel = targetMinLevel;
+
+          return originalMinLevel;
+        };
+
+        // Override search method
+        if (ragfairCallbacks.search) {
+          const originalSearch = ragfairCallbacks.search.bind(ragfairCallbacks);
+          ragfairCallbacks.search = (url: string, info: any, sessionID: string): any => {
+            const originalMinLevel = updateGlobalsForSession(sessionID);
+            const globals = this.db.getTables().globals;
+
+            try {
+              const result = originalSearch(url, info, sessionID);
+              if (globals) {
+                globals.config.RagFair.minUserLevel = originalMinLevel;
+              }
+              return result;
+            } catch (error) {
+              if (globals) {
+                globals.config.RagFair.minUserLevel = originalMinLevel;
+              }
+              throw error;
+            }
+          };
+        }
+
+        // Override addOffer method
+        if (ragfairCallbacks.addOffer) {
+          const originalAddOffer = ragfairCallbacks.addOffer.bind(ragfairCallbacks);
+          ragfairCallbacks.addOffer = (pmcData: any, info: any, sessionID: string): any => {
+            const originalMinLevel = updateGlobalsForSession(sessionID);
+            const globals = this.db.getTables().globals;
+
+            try {
+              const result = originalAddOffer(pmcData, info, sessionID);
+              if (globals) {
+                globals.config.RagFair.minUserLevel = originalMinLevel;
+              }
+              return result;
+            } catch (error) {
+              if (globals) {
+                globals.config.RagFair.minUserLevel = originalMinLevel;
+              }
+              throw error;
+            }
+          };
+        }
+
+        // Override extendOffer method
+        if (ragfairCallbacks.extendOffer) {
+          const originalExtendOffer = ragfairCallbacks.extendOffer.bind(ragfairCallbacks);
+          ragfairCallbacks.extendOffer = (pmcData: any, info: any, sessionID: string): any => {
+            const originalMinLevel = updateGlobalsForSession(sessionID);
+            const globals = this.db.getTables().globals;
+
+            try {
+              const result = originalExtendOffer(pmcData, info, sessionID);
+              if (globals) {
+                globals.config.RagFair.minUserLevel = originalMinLevel;
+              }
+              return result;
+            } catch (error) {
+              if (globals) {
+                globals.config.RagFair.minUserLevel = originalMinLevel;
+              }
+              throw error;
+            }
+          };
+        }
+
+        // Override getMarketPrice method
+        if (ragfairCallbacks.getMarketPrice) {
+          const originalGetMarketPrice = ragfairCallbacks.getMarketPrice.bind(ragfairCallbacks);
+          ragfairCallbacks.getMarketPrice = (url: string, info: any, sessionID: string): any => {
+            const originalMinLevel = updateGlobalsForSession(sessionID);
+            const globals = this.db.getTables().globals;
+
+            try {
+              const result = originalGetMarketPrice(url, info, sessionID);
+              if (globals) {
+                globals.config.RagFair.minUserLevel = originalMinLevel;
+              }
+              return result;
+            } catch (error) {
+              if (globals) {
+                globals.config.RagFair.minUserLevel = originalMinLevel;
+              }
+              throw error;
+            }
+          };
+        }
+
+        // Override getFleaPrices method
+        if (ragfairCallbacks.getFleaPrices) {
+          const originalGetFleaPrices = ragfairCallbacks.getFleaPrices.bind(ragfairCallbacks);
+          ragfairCallbacks.getFleaPrices = (url: string, info: any, sessionID: string): any => {
+            const originalMinLevel = updateGlobalsForSession(sessionID);
+            const globals = this.db.getTables().globals;
+
+            try {
+              const result = originalGetFleaPrices(url, info, sessionID);
+              if (globals) {
+                globals.config.RagFair.minUserLevel = originalMinLevel;
+              }
+              return result;
+            } catch (error) {
+              if (globals) {
+                globals.config.RagFair.minUserLevel = originalMinLevel;
+              }
+              throw error;
+            }
+          };
+        }
+      },
+      { frequency: 'Always' },
+    );
   }
 
   private overrideControllers(): void {

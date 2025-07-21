@@ -243,6 +243,8 @@ export type UserConfig = {
     resetOffraidPositionOnPlayerDeath: boolean;
     playerScavMoveOffraidPosition: boolean;
     keepFoundInRaidTweak: boolean;
+    fleaMarketMode: 'everywhere' | 'location_based' | 'disabled';
+    fleaMarketMinLevel: number;
   };
   runUninstallProcedure?: false;
 };
@@ -297,6 +299,8 @@ const DEFAULT_USER_CONFIG: UserConfig = {
     resetOffraidPositionOnPlayerDeath: true,
     playerScavMoveOffraidPosition: false,
     keepFoundInRaidTweak: true,
+    fleaMarketMode: 'everywhere',
+    fleaMarketMinLevel: 15,
   },
   runUninstallProcedure: false,
 };
@@ -557,6 +561,16 @@ export const getUserConfig = (jsonUtil: JsonUtil): UserConfig => {
   if (userConfig.gameplay.tradersAccessRestriction === undefined) {
     userConfig.gameplay.tradersAccessRestriction =
       DEFAULT_USER_CONFIG.gameplay.tradersAccessRestriction;
+    needToWriteFile = true;
+  }
+
+  if (userConfig.gameplay.fleaMarketMode === undefined) {
+    userConfig.gameplay.fleaMarketMode = DEFAULT_USER_CONFIG.gameplay.fleaMarketMode;
+    needToWriteFile = true;
+  }
+
+  if (userConfig.gameplay.fleaMarketMinLevel === undefined) {
+    userConfig.gameplay.fleaMarketMinLevel = DEFAULT_USER_CONFIG.gameplay.fleaMarketMinLevel;
     needToWriteFile = true;
   }
 
