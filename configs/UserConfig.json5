@@ -1,5 +1,5 @@
 {
-  selectedConfig: 'Slum_K1ng',
+  selectedConfig: 'Default',
   gameplay: {
     multistash: true,
     tradersAccessRestriction: true,
@@ -11,7 +11,7 @@
     // - 'location_based': Only available at configured locations [ragfair]
     // - 'disabled': Completely disabled
     fleaMarketMode: 'location_based',
-    fleaMarketMinLevel: 1, // Minimum level required to access flea market
+    fleaMarketMinLevel: 15, // Minimum level required to access flea market
   },
   runUninstallProcedure: false,
 }
