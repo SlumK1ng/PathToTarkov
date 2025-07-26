@@ -15,7 +15,7 @@
   // Check the `Examples/OverrideByProfiles` config for a full usage example
   override_by_profiles: {},
 
-  debug_exfiltrations_tooltips_locale: 'en',
+  //debug_exfiltrations_tooltips_locale: 'en',
 
   restrictions_in_raid: {
     // roubles
