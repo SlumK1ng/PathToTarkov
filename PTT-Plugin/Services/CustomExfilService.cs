@@ -3,10 +3,12 @@ using EFT.Interactive;
 using Comfort.Common;
 using System;
 using System.Collections.Generic;
+using UnityEngine;
 
 using PTT.Helpers;
 using PTT.Data;
 using PTT.Patches;
+using Logger = PTT.Helpers.Logger;
 
 namespace PTT.Services;
 
@@ -14,9 +16,11 @@ public static class CustomExfilService
 {
     public static void ExtractTo(ExfiltrationPoint exfil, ExfilTarget exfilTarget)
     {
+        // For now, Fika extraction is handled the same as transit
+        // The Fika module will handle the actual extraction logic
         if (Plugin.FikaIsInstalled)
         {
-            CustomExfilServiceFika.ExtractTo(exfil, exfilTarget);
+            FikaBridge.TransitTo(exfilTarget);
             return;
         }
 
@@ -52,9 +56,9 @@ public static class CustomExfilService
     {
         if (Plugin.FikaIsInstalled)
         {
-            TransitVoteServiceFika.VoteForExfil(exfilTarget, () =>
+            FikaBridge.VoteForExfil(exfilTarget, () =>
             {
-                CustomExfilServiceFika.TransitTo(exfilTarget);
+                FikaBridge.TransitTo(exfilTarget);
                 onTransitDone();
             });
             return;
@@ -89,7 +93,14 @@ public static class CustomExfilService
         int playersCount = 1;
 
         vanillaTransitController.Transit(transit, playersCount, transitHash, profiles, player);
-        onTransitDone();
+        
+        // Defer the callback to avoid "ManualUpdate from inside ManualUpdate" error
+        if (onTransitDone != null)
+        {
+            var delayedActionGO = new GameObject("PTT_DelayedAction");
+            delayedActionGO.AddComponent<DelayedAction>().Init(onTransitDone);
+        }
+        
         Logger.Info($"transit done for profile '{player.ProfileId}'");
     }
 
@@ -97,7 +108,7 @@ public static class CustomExfilService
     {
         if (Plugin.FikaIsInstalled)
         {
-            TransitVoteServiceFika.CancelVoteForExfil(cancelMessage);
+            FikaBridge.CancelVoteForExfil(cancelMessage);
         }
     }
 
@@ -105,7 +116,7 @@ public static class CustomExfilService
     {
         if (Plugin.FikaIsInstalled && exfilTarget.isTransit)
         {
-            return TransitVoteServiceFika.IsTransitDisabled(exfilTarget);
+            return FikaBridge.IsTransitDisabled(exfilTarget);
         }
         return false;
     }

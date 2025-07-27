@@ -3,12 +3,14 @@ using BepInEx.Bootstrap;
 
 using PTT.Services;
 using System;
+using System.Reflection;
 using EFT.Communications;
 using PTT;
 using BepInEx.Logging;
 
 namespace PTT;
 
+[BepInDependency("com.fika.core", BepInDependency.DependencyFlags.SoftDependency)]
 [BepInPlugin("Trap.PathToTarkov", "Path To Tarkov", PluginVersion.VERSION)]
 public class Plugin : BaseUnityPlugin
 {
@@ -86,6 +88,15 @@ public class Plugin : BaseUnityPlugin
             Helpers.Logger.Error($"Stack trace: {ex.StackTrace}");
             throw;
         }
+
+        // Initialize Fika module if installed
+        if (FikaIsInstalled)
+        {
+            TryInitFikaModule();
+        }
+        
+        // Trigger Awake event for Fika module
+        FikaBridge.PluginAwake();
     }
 
     protected void Start()
@@ -98,12 +109,11 @@ public class Plugin : BaseUnityPlugin
 
             if (fikaVersion < new Version(FIKA_MIN_VERSION))
             {
-                Helpers.Logger.Warning($"Fika >= {IE_API_MIN_VERSION} is required");
+                Helpers.Logger.Warning($"Fika >= {FIKA_MIN_VERSION} is required");
                 FikaIsOutdated = true;
             }
 
             Helpers.Logger.Info($"Fika.Core plugin detected");
-            TransitVoteServiceFika.Init();
         }
 
         if (InteractableExfilsApiIsInstalled)
@@ -123,15 +133,16 @@ public class Plugin : BaseUnityPlugin
         {
             Helpers.Logger.Error($"Jehree.InteractableExfilsAPI plugin is missing");
         }
+        
+        // Trigger Start event for Fika module
+        FikaBridge.PluginStart();
     }
 
     // Warning: use GameStarted to get a coopPlayer
     public static void RaidStarted()
     {
-        if (FikaIsInstalled)
-        {
-            TransitVoteServiceFika.OnRaidStarted();
-        }
+        // Trigger RaidStarted event for Fika module
+        FikaBridge.RaidStarted();
 
         if (CurrentLocationDataService != null)
         {
@@ -168,10 +179,8 @@ public class Plugin : BaseUnityPlugin
 
     public static void GameStarted()
     {
-        if (FikaIsInstalled)
-        {
-            TransitVoteServiceFika.OnGameStarted();
-        }
+        // Trigger GameStarted event for Fika module
+        FikaBridge.GameStarted();
 
         DisplayOutdatedVersionsWarnings();
         Helpers.Logger.Info("Game started!");
@@ -232,5 +241,29 @@ public class Plugin : BaseUnityPlugin
         }
 
         PathToTarkovServerFullVersion = data.fullVersion;
+    }
+
+    private void TryInitFikaModule()
+    {
+        try
+        {
+            Assembly fikaModuleAssembly = Assembly.Load("PTT-Fika");
+            Type mainType = fikaModuleAssembly.GetType("PTT.Fika.Main");
+            MethodInfo initMethod = mainType.GetMethod("Init", BindingFlags.Public | BindingFlags.Static);
+
+            if (initMethod != null)
+            {
+                initMethod.Invoke(null, null);
+                Helpers.Logger.Info("Successfully initialized PTT-Fika module");
+            }
+            else
+            {
+                Helpers.Logger.Error("Failed to find Init method in PTT-Fika module");
+            }
+        }
+        catch (Exception ex)
+        {
+            Helpers.Logger.Error($"Failed to load PTT-Fika module: {ex.Message}");
+        }
     }
 }

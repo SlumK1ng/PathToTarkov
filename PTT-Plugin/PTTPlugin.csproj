@@ -66,10 +66,6 @@
     <Reference Include="0Harmony">
       <HintPath>$(PathToSPT)\BepInEx\core\0Harmony.dll</HintPath>
     </Reference>
-
-    <Reference Include="Fika.Core">
-      <HintPath>$(PathToSPT)\BepInEx\plugins\Fika.Core.dll</HintPath>
-    </Reference>
     
     <Reference Include="DissonanceVoip">
       <HintPath>$(PathToSPT)\EscapeFromTarkov_Data\Managed\DissonanceVoip.dll</HintPath>

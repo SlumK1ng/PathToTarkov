@@ -9,6 +9,7 @@ const { mkdirp } = require('mkdirp');
 
 const PTT_DLL_FILENAME = 'Trap.PathToTarkov.dll';
 const PTT_PACKETS_DLL_FILENAME = 'Trap.PathToTarkov-Packets.dll';
+const PTT_FIKA_DLL_FILENAME = 'PTT-Fika.dll';
 
 const main = async modName => {
   const serverModDir = `./dist/user/mods/${modName}`;
@@ -18,8 +19,10 @@ const main = async modName => {
     'node ./node_modules/rimraf/bin.js dist/BepInEx',
     () => mkdirp.sync(serverModDir),
     () => mkdirp.sync('./dist/BepInEx/plugins'),
+    () => mkdirp.sync('./dist/BepInEx/plugins/PathToTarkov'),
     `cpr ./PTT-Plugin/bin/Debug/net471/${PTT_DLL_FILENAME} ./dist/BepInEx/plugins/${PTT_DLL_FILENAME} -o`,
     `cpr ./PTT-Packets/bin/Debug/net471/${PTT_PACKETS_DLL_FILENAME} ./dist/BepInEx/plugins/${PTT_PACKETS_DLL_FILENAME} -o`,
+    `cpr ./PTT-Fika/bin/Debug/net472/${PTT_FIKA_DLL_FILENAME} ./dist/BepInEx/plugins/PathToTarkov/${PTT_FIKA_DLL_FILENAME} -o`,
     `cpr package.json ${serverModDir}/package.json -o`,
     `cpr dist/src ${serverModDir}/src -o`,
     `cpr configs ${serverModDir}/configs -o`,
